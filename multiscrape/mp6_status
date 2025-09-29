@@ -10,8 +10,9 @@ multiscrape:
         name: moj_prad_mp6
         select: 'div.uncode_text_column.text-lead span[data-teams="true"]'
         value_template: >
-          {{ value | regex_replace('^0+', '') | int }}
-
+          {{ value | regex_replace('[^0-9]', '') | int }}
+        unit_of_measurement: "nr"
+        state_class: measurement
         attributes:
           - name: aktualizacja
             select: 'div.uncode_text_column.text-lead strong:first-of-type'
