@@ -1,0 +1,26 @@
+multiscrape:
+  - name: moj_prad
+    resource: https://mojprad.gov.pl/
+    scan_interval: 3600
+    headers:
+      User-Agent: Mozilla/5.0
+
+    sensor:
+      - unique_id: moj_prad_mp6
+        name: moj_prad_mp6
+        select: 'div.uncode_text_column.text-lead span[data-teams="true"]'
+        value_template: >
+          {{ value | regex_replace('^0+', '') | int }}
+
+        attributes:
+          - name: aktualizacja
+            select: 'div.uncode_text_column.text-lead strong:first-of-type'
+            value_template: "{{ value | trim }}"
+          - name: dzien_rozpatrywanego_wniosku
+            select: 'div.uncode_text_column.text-lead b:first-of-type'
+            value_template: >
+              {{ value | regex_findall_index('^(\\d{2}\\.\\d{2}\\.\\d{4})', 0) }}
+          - name: godzina_rozpatrywanego_wniosku
+            select: 'div.uncode_text_column.text-lead b:first-of-type'
+            value_template: >
+              {{ value | regex_findall_index('godz\\.\\s*(\\d{2}\\.\\d{2})', 0) }}
