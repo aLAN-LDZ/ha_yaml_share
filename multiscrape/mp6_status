@@ -1,27 +1,30 @@
 multiscrape:
   - name: moj_prad
     resource: https://mojprad.gov.pl/
-    scan_interval: 3600
+    scan_interval: 43200
     headers:
       User-Agent: Mozilla/5.0
 
     sensor:
       - unique_id: moj_prad_mp6
         name: moj_prad_mp6
-        select: 'div.uncode_text_column.text-lead span[data-teams="true"]'
+        select: 'div.uncode_text_column.text-lead p'
         value_template: >
-          {{ value | regex_replace('[^0-9]', '') | int }}
+          {# wyciągnij tylko cyfry ZA 'MP6/' #}
+          {% set m = value | regex_findall_index('(?<=\\bMP6/)(\\d+)', 0) %}
+          {% set prev = states('sensor.moj_prad_mp6') | int(0) %}
+          {{ (m if m is not none else prev) | int }}
         unit_of_measurement: "nr"
         state_class: measurement
         attributes:
           - name: aktualizacja
             select: 'div.uncode_text_column.text-lead strong:first-of-type'
-            value_template: "{{ value | trim }}"
+            value_template: "{{ value | default('') | trim }}"
           - name: dzien_rozpatrywanego_wniosku
-            select: 'div.uncode_text_column.text-lead b:first-of-type'
+            select: 'div.uncode_text_column.text-lead p'
             value_template: >
-              {{ value | regex_findall_index('^(\\d{2}\\.\\d{2}\\.\\d{4})', 0) }}
+              {{ value | regex_findall_index('(\\d{2}\\.\\d{2}\\.\\d{4})', 0) | default('') }}
           - name: godzina_rozpatrywanego_wniosku
-            select: 'div.uncode_text_column.text-lead b:first-of-type'
+            select: 'div.uncode_text_column.text-lead p'
             value_template: >
-              {{ value | regex_findall_index('godz\\.\\s*(\\d{2}\\.\\d{2})', 0) }}
+              {{ value | regex_findall_index('godz\\.?\\s*(\\d{2}[\\.:]\\d{2})', 0) | default('') }}
