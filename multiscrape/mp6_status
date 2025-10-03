@@ -6,8 +6,8 @@ multiscrape:
       User-Agent: Mozilla/5.0
 
     sensor:
-      - unique_id: moj_prad_mp6
-        name: moj_prad_mp6
+      - unique_id: moj_prad_mp6_v3
+        name: moj_prad_mp6_v3
         select: 'div.uncode_text_column.text-lead p'
         value_template: >
           {# wyciągnij tylko cyfry ZA 'MP6/' #}
@@ -20,11 +20,15 @@ multiscrape:
           - name: aktualizacja
             select: 'div.uncode_text_column.text-lead strong:first-of-type'
             value_template: "{{ value | default('') | trim }}"
+
           - name: dzien_rozpatrywanego_wniosku
             select: 'div.uncode_text_column.text-lead p'
             value_template: >
-              {{ value | regex_findall_index('(\\d{2}\\.\\d{2}\\.\\d{4})', 0) | default('') }}
+              {# bierz datę TYLKO po frazie "w dniu" #}
+              {{ value | regex_findall_index('w\\s+dniu\\s*(\\d{2}\\.\\d{2}\\.\\d{4})', 0) | default('') }}
+
           - name: godzina_rozpatrywanego_wniosku
             select: 'div.uncode_text_column.text-lead p'
             value_template: >
-              {{ value | regex_findall_index('godz\\.?\\s*(\\d{2}[\\.:]\\d{2})', 0) | default('') }}
+              {# bierz godzinę po "godz." / "godz" i normalizuj 10.26 -> 10:26 #}
+              {{ (value | regex_findall_index('godz\\.?\\s*(\\d{2}[:\\.]\\d{2})', 0) | default('')) | replace('.', ':') }}
